@@ -13,7 +13,9 @@ class Scenario():
         self.load_data()
         self.check_data()
         self.set_attributes()
-        self.get_downtine_payment()
+        self.set_downtine_payment()
+        self.set_mortgage_monthly_payment()
+        self.set_cash_flow() 
 
     def load_data(self):
         with open(self.scenario_path) as f:
@@ -28,11 +30,36 @@ class Scenario():
     def set_attributes(self):
         for k, v in self.data.items():
             setattr(self, k, v)
+        self.mortgage_amount = self.price * self.mortgage_ratio
 
-    def get_downtine_payment(self):
+    def set_downtine_payment(self):
         tmp = (self.price * (1 + self.registration_tax - self.mortgage_ratio)
                + self.renovation_cost + self.oneshot_cost)
         self.downtime_payment = tmp
+
+    def set_mortgage_monthly_payment(self):
+        
+        m = (self.mortgage_amount * self.interest_rate/12 *
+             1/(1-(1+self.interest_rate/12)**(-self.mortgage_duration*12)))
+        self.mortgage_monthly_payment = m
+        self.mortgage_total_cost = m * self.mortgage_duration * 12
+
+    def set_cash_flow(self):
+        self.cash_flow = (self.monthly_rent 
+                          - self.mortgage_monthly_payment 
+                          - self.monthly_cost 
+                          - (self.yearly_vacancy_ratio*self.monthly_rent
+                             + self.yearly_cost + self.yearly_tax
+                             )/12
+                          )
+            
+
 ##}
 
+##{
 sc = Scenario("realestate_cashflow/example.json")
+print(sc.cash_flow)
+print(sc.mortgage_monthly_payment)
+##}
+
+
